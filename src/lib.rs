@@ -45,14 +45,13 @@ impl<K: Clone + Eq + Hash> Broadcast<K> {
 
         loop {
             park_timeout(check_every);
-
-            // De Morgan's Law: equivalent to is_none_or(|waiters| !waiters.contains_key(&thread_id))
-            let is_waiting = self
-                .0
-                .get(&key)
-                .is_some_and(|waiters| waiters.contains_key(&thread_id));
-
-            if !is_waiting || !condition() {
+            
+            let is_notified = match self.0.get(&key) {
+                Some(waiters) => !waiters.contains_key(&thread_id),
+                None => false,
+            };
+            
+            if is_notified || !condition() {
                 break;
             }
         }
