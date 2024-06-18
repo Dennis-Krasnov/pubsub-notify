@@ -39,7 +39,7 @@ impl<K: Clone + Eq + Hash> Broadcast<K> {
 
         {
             // scoped to prevent dashmap deadlock
-            let mut waiters = self.0.entry(key.clone()).or_default();
+            let mut waiters = self.0.entry(key.clone()).or_default(); // TODO: reuse hashmaps or_insert_with
             waiters.insert(thread_id, thread_handle);
         }
 
@@ -48,7 +48,7 @@ impl<K: Clone + Eq + Hash> Broadcast<K> {
             
             let is_notified = match self.0.get(&key) {
                 Some(waiters) => !waiters.contains_key(&thread_id),
-                None => false,
+                None => true,
             };
             
             if is_notified || !condition() {
